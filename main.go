@@ -14,8 +14,6 @@ import (
 )
 
 const dburi = "mongodb://localhost:27017"
-const dbname = "hot-res"
-const userColl = "users"
 
 var config = fiber.Config(fiber.Config{
 	ErrorHandler: func(c *fiber.Ctx, err error) error {	
@@ -38,6 +36,7 @@ func main() {
 	app := fiber.New(config)
 	apiv1 := app.Group("/api/v1")
 
+	apiv1.Put("/user/:id", userHandler.HandlePutUser)
 	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
 	apiv1.Post("/user", userHandler.HandlePostUser)
 	apiv1.Get("/user", userHandler.HandleGetUsers)
