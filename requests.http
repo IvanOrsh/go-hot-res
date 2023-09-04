@@ -1,0 +1,42 @@
+POST http://localhost:5001/api/v1/users HTTP/1.1
+content-type: application/json
+
+{
+   "firstName": "James",
+   "lastName": "at the water cooler",
+   "email": "james@james.com",
+   "password": "pass123"
+}
+
+###
+POST http://localhost:5001/api/v1/users HTTP/1.1
+content-type: application/json
+
+{
+   "firstName": "Bill",
+   "lastName": "Dauterive",
+   "email": "dozer@main.com",
+   "password": "password123"
+}
+
+###
+
+POST http://localhost:5001/api/v1/users HTTP/1.1
+content-type: application/json
+
+{
+   "firstName": "Mark",
+   "lastName": "from the block",
+   "email": "mark@makr.com",
+   "password": "123pass"
+}
+
+###
+
+GET http://localhost:5001/api/v1/users HTTP/1.1
+Content-Type:  application/json
+
+###
+
+GET http://localhost:5001/api/v1/user/64f515e96be4c8c27dbd285d HTTP/1.1
+Content-Type: application/json
