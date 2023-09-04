@@ -1,8 +1,11 @@
 package api
 
 import (
+	"errors"
+
 	"github.com/IvanOrsh/go-hot-res/db"
 	"github.com/IvanOrsh/go-hot-res/types"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,7 +20,19 @@ func NewUserHandler(userStore db.UserStore) *UserHandler {
 	}
 }
 
-func (h * UserHandler) HandlePostUser(c *fiber.Ctx) error {
+func (h *UserHandler) HandlePutUser(c * fiber.Ctx) error {
+	return nil
+}
+
+func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
+	userID := c.Params("id")
+	if err := h.userStore.DeleteUser(c.Context(), userID); err != nil {
+		return err
+	}
+	return c.JSON(map[string]string{"deleted": userID})
+}
+
+func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 	var params types.CreateUserParams
 	if err := c.BodyParser(&params); err != nil {
 		return err
@@ -40,6 +55,9 @@ func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	user, err := h.userStore.GetUserByID(c.Context(), id)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return c.JSON(map[string]string{"error": "not found"})
+		}
 		return err
 	}
 	
