@@ -30,7 +30,7 @@ func main() {
 		log.Fatal(err)
 	}
 	// handler initialization
-	userHandler := api.NewUserHandler(db.NewMongoUserStore(client))
+	userHandler := api.NewUserHandler(db.NewMongoUserStore(client, db.DBNAME))
 
 
 	app := fiber.New(config)
