@@ -30,6 +30,22 @@ func (tdb testdb) teardown(t *testing.T) {
 	}
 }
 
+func (tdb testdb) seedUsers(t *testing.T) *types.User {
+	user := types.User{
+		FirstName: "James",
+		LastName: "St. James",
+		Email: "valid_email1@email.com",
+		EncryptedPassword: "encrypted",
+	}
+
+	resp, err := tdb.UserStore.InsertUser(context.TODO(), &user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return resp
+}
+
 func setup(t *testing.T) *testdb {
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(testdburi))
 	if err != nil {
@@ -83,10 +99,53 @@ func TestPostUser(t *testing.T) {
 	if user.FirstName != params.FirstName {
 		t.Errorf("expected firstName %s but got %s", params.FirstName, user.FirstName)
 	}
+
 	if user.LastName != params.LastName {
 		t.Errorf("expected lastName %s but got %s", params.LastName, user.LastName)
 	}
+	
 	if user.Email != params.Email {
 		t.Errorf("expected email %s but got %s", params.Email, user.Email)
+	}
+}
+
+func TestGetUsers(t *testing.T) {
+	tdb := setup(t)
+	insertedUser := tdb.seedUsers(t)
+	defer tdb.teardown(t)
+
+	app := fiber.New()
+	userHandler := NewUserHandler(tdb.UserStore)
+	app.Get("/", userHandler.HandleGetUsers)	
+
+	req := httptest.NewRequest("GET", "/", nil)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Error(err)
+	}
+	
+	var users []types.User
+
+	json.NewDecoder(resp.Body).Decode(&users)
+
+	if resp.StatusCode != 200 {
+		t.Errorf("expected status code to be 200")
+	}
+
+	if len(users) != 1 {
+		t.Errorf("expected length of users %d but got %d", 1, len(users))
+	}
+
+	if users[0].FirstName != insertedUser.FirstName {
+		t.Errorf("expected firstName %s but got %s", users[0].FirstName, insertedUser.FirstName)
+	}
+
+	if users[0].LastName != insertedUser.LastName {
+		t.Errorf("expected lastName %s but got %s", users[0].LastName, insertedUser.LastName)
+	}
+	
+	if users[0].Email != insertedUser.Email {
+		t.Errorf("expected email %s but got %s", users[0].Email, insertedUser.Email)
 	}
 }
