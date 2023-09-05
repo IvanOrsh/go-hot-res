@@ -154,6 +154,73 @@ func TestGetUser(t *testing.T) {
 	}
 }
 
+func TestPutUser(t *testing.T) {
+	tdb := setup(t)
+	insertedUser := tdb.seedUsers(t)
+	defer tdb.teardown(t)
+
+	app := fiber.New()
+	userHandler := NewUserHandler(tdb.UserStore)
+	app.Put("/:id", userHandler.HandlePutUser)
+	app.Get("/:id", userHandler.HandleGetUser)
+
+	stringObjectID := primitive.ObjectID.Hex(insertedUser.ID)
+
+	params := types.UpdateUserParams{
+		FirstName: "NewName",
+		LastName: "NewLastName",
+	}
+
+	b, _ := json.Marshal(params)
+	req := httptest.NewRequest(
+		"PUT",
+		fmt.Sprintf("/%s", stringObjectID),
+		bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+	_, err := app.Test(req)
+	if err != nil {
+		t.Error(err)
+	}
+
+	req = httptest.NewRequest(
+		"GET",
+		fmt.Sprintf("/%s", stringObjectID),
+		nil,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var user types.User
+
+	json.NewDecoder(resp.Body).Decode(&user)
+
+	if resp.StatusCode != 200 {
+		t.Errorf("expected status code to be 200")
+	}
+
+	if len(user.ID) == 0 {
+		t.Errorf("expected a user id to be set")
+	}
+
+
+	if len(user.EncryptedPassword) > 0 {
+		t.Errorf("expected the EncryptedPassword not to be included in the json response")
+	}
+
+	if user.FirstName != params.FirstName {
+		t.Errorf("expected firstName %s but got %s", params.FirstName, user.FirstName)
+	}
+
+	if user.LastName != params.LastName {
+		t.Errorf("expected lastName %s but got %s", params.LastName, user.LastName)
+	}
+}
+
 func TestGetUsers(t *testing.T) {
 	tdb := setup(t)
 	insertedUser := tdb.seedUsers(t)
