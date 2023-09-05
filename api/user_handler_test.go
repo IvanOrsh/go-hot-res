@@ -221,6 +221,54 @@ func TestPutUser(t *testing.T) {
 	}
 }
 
+func TestDeleteUser(t *testing.T) {
+	tdb := setup(t)
+	insertedUser := tdb.seedUsers(t)
+	defer tdb.teardown(t)
+
+	app := fiber.New()
+	userHandler := NewUserHandler(tdb.UserStore)
+	app.Delete("/:id", userHandler.HandleDeleteUser)
+	app.Get("/:id", userHandler.HandleGetUser)
+
+	stringObjectID := primitive.ObjectID.Hex(insertedUser.ID)
+
+	req := httptest.NewRequest(
+		"DELETE",
+		fmt.Sprintf("/%s", stringObjectID),
+		nil,
+	)
+	_, err := app.Test(req)
+	if err != nil {
+		t.Error(err)
+	}
+
+	req = httptest.NewRequest(
+		"GET",
+		fmt.Sprintf("/%s", stringObjectID),
+		nil,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var rb = map[string]any{}
+
+	json.NewDecoder(resp.Body).Decode(&rb)
+
+	if resp.StatusCode != 200 {
+		t.Errorf("expected status code to be 200")
+	}
+
+	if rb["error"] != "not found" {
+		t.Errorf("expected: 'error': 'not found'")
+	}
+}
+
 func TestGetUsers(t *testing.T) {
 	tdb := setup(t)
 	insertedUser := tdb.seedUsers(t)
