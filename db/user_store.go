@@ -29,13 +29,13 @@ type UserStore interface {
 
 type MongoUserStore struct {
 	client *mongo.Client
-	coll *mongo.Collection
+	coll   *mongo.Collection
 }
 
 func NewMongoUserStore(client *mongo.Client, dbname string) *MongoUserStore {
 	return &MongoUserStore{
 		client: client,
-		coll: client.Database(dbname).Collection(userColl),
+		coll:   client.Database(dbname).Collection(userColl),
 	}
 }
 
