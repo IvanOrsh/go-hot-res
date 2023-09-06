@@ -22,7 +22,7 @@ func NewUserHandler(userStore db.UserStore) *UserHandler {
 	}
 }
 
-func (h *UserHandler) HandlePutUser(c * fiber.Ctx) error {
+func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 	var (
 		// values bson.M
 		params types.UpdateUserParams
@@ -55,7 +55,7 @@ func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 	var params types.CreateUserParams
 	if err := c.BodyParser(&params); err != nil {
 		return err
-	}	
+	}
 	if errors := params.Validate(); len(errors) > 0 {
 		return c.JSON(errors)
 	}
@@ -79,7 +79,7 @@ func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 		}
 		return err
 	}
-	
+
 	return c.JSON(user)
 }
 
@@ -90,4 +90,3 @@ func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
 	}
 	return c.JSON(users)
 }
-

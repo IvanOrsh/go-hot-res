@@ -17,11 +17,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	testdburi = "mongodb://localhost:27017"
-	dbname = "hot-res-test"
-)
-
 type testdb struct {
 	db.UserStore
 }
@@ -34,9 +29,9 @@ func (tdb testdb) teardown(t *testing.T) {
 
 func (tdb testdb) seedUsers(t *testing.T) *types.User {
 	user := types.User{
-		FirstName: "James",
-		LastName: "St. James",
-		Email: "valid_email1@email.com",
+		FirstName:         "James",
+		LastName:          "St. James",
+		Email:             "valid_email1@email.com",
 		EncryptedPassword: "encrypted",
 	}
 
@@ -49,13 +44,13 @@ func (tdb testdb) seedUsers(t *testing.T) *types.User {
 }
 
 func setup(t *testing.T) *testdb {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(testdburi))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DBURI))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	return &testdb{
-		UserStore: db.NewMongoUserStore(client, dbname),
+		UserStore: db.NewMongoUserStore(client, db.TestDBNAME),
 	}
 }
 
@@ -68,10 +63,10 @@ func TestPostUser(t *testing.T) {
 	app.Post("/", userHandler.HandlePostUser)
 
 	params := types.CreateUserParams{
-		Email: "valid_email@email.com",
+		Email:     "valid_email@email.com",
 		FirstName: "James",
-		LastName: "Foo",
-		Password: "valid_password123",
+		LastName:  "Foo",
+		Password:  "valid_password123",
 	}
 
 	b, _ := json.Marshal(params)
@@ -105,7 +100,7 @@ func TestPostUser(t *testing.T) {
 	if user.LastName != params.LastName {
 		t.Errorf("expected lastName %s but got %s", params.LastName, user.LastName)
 	}
-	
+
 	if user.Email != params.Email {
 		t.Errorf("expected email %s but got %s", params.Email, user.Email)
 	}
@@ -132,14 +127,14 @@ func TestGetUser(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	var user types.User
 
 	json.NewDecoder(resp.Body).Decode(&user)
 
 	if resp.StatusCode != 200 {
 		t.Errorf("expected status code to be 200")
-	}	
+	}
 
 	if user.FirstName != insertedUser.FirstName {
 		t.Errorf("expected firstName %s but got %s", user.FirstName, insertedUser.FirstName)
@@ -148,7 +143,7 @@ func TestGetUser(t *testing.T) {
 	if user.LastName != insertedUser.LastName {
 		t.Errorf("expected lastName %s but got %s", user.LastName, insertedUser.LastName)
 	}
-	
+
 	if user.Email != insertedUser.Email {
 		t.Errorf("expected email %s but got %s", user.Email, insertedUser.Email)
 	}
@@ -168,7 +163,7 @@ func TestPutUser(t *testing.T) {
 
 	params := types.UpdateUserParams{
 		FirstName: "NewName",
-		LastName: "NewLastName",
+		LastName:  "NewLastName",
 	}
 
 	b, _ := json.Marshal(params)
@@ -206,7 +201,6 @@ func TestPutUser(t *testing.T) {
 	if len(user.ID) == 0 {
 		t.Errorf("expected a user id to be set")
 	}
-
 
 	if len(user.EncryptedPassword) > 0 {
 		t.Errorf("expected the EncryptedPassword not to be included in the json response")
@@ -276,7 +270,7 @@ func TestGetUsers(t *testing.T) {
 
 	app := fiber.New()
 	userHandler := NewUserHandler(tdb.UserStore)
-	app.Get("/", userHandler.HandleGetUsers)	
+	app.Get("/", userHandler.HandleGetUsers)
 
 	req := httptest.NewRequest("GET", "/", nil)
 	req.Header.Set("Content-Type", "application/json")
@@ -284,7 +278,7 @@ func TestGetUsers(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	var users []types.User
 
 	json.NewDecoder(resp.Body).Decode(&users)
@@ -304,7 +298,7 @@ func TestGetUsers(t *testing.T) {
 	if users[0].LastName != insertedUser.LastName {
 		t.Errorf("expected lastName %s but got %s", users[0].LastName, insertedUser.LastName)
 	}
-	
+
 	if users[0].Email != insertedUser.Email {
 		t.Errorf("expected email %s but got %s", users[0].Email, insertedUser.Email)
 	}
